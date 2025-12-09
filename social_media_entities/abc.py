@@ -4,5 +4,5 @@ from pydantic import BaseModel
 
 
 class SocialMediaEntity(BaseModel):
-    id: uuid.UUID
-    status: bool
+    id: uuid.UUID = uuid.uuid4()
+
