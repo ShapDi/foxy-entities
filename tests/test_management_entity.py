@@ -1,27 +1,124 @@
 import pytest
 
-from social_media_entities.abc import SocialMediaEntity
-from social_media_entities.exceptions import EntityTypeException
-from social_media_entities.management_entity import EntityController
+from social_media_entities import EntityController, SocialMediaEntity
+from social_media_entities.exceptions import (
+    EntityTypeException,
+    BanningAbcClass,
+    PresenceObjectException,
+)
+from tests.test_abc import TestSocialMediaEntity
 
 
-class TestSocialMediaEntity(SocialMediaEntity):
-    test_str: str
-
-
-@pytest.mark.parametrize("input_value", [1, 0.2, ([1, 4, 5])])
+@pytest.mark.parametrize(
+    "input_value",
+    [
+        1,  # int
+        0.2,  # float
+        [1, 4, 5],  # list
+        "hello",  # str
+        True,  # bool
+        None,  # NoneType
+        (1, 2, 3),  # tuple
+        {"key": "value"},  # dict
+        {1, 2, 3},  # set
+        3 + 4j,  # complex
+        b"bytes",  # bytes
+        bytearray(b"test"),  # bytearray
+    ],
+)
 def test_exception_entity_type_add_entity(input_value):
+    """
+    Test case for checking the prohibition of transmission of
+    a type that does not correspond to SocialMediaEntity
+    """
     with pytest.raises(EntityTypeException):
         EntityController().add_entity(input_value)
 
 
-# append the accumulated fields to the messages for the next request
+def test_add_entity_incorrect_type_abc_class():
+    """
+    Test case prohibiting transfer of abc class
+    """
+    with pytest.raises(BanningAbcClass):
+        EntityController().add_entity(SocialMediaEntity())
 
 
-# Тестовый кейс добавляется 2 элемента . 1 должен быть последний
 def test_add_entity_position():
-    pass
+    """
+    Test case of how getting an entity in a FIFO queue works
+    """
+    entity_controller = EntityController()
+    test_entity_1 = TestSocialMediaEntity(test_str="test_entity_1")
+    test_entity_2 = TestSocialMediaEntity(test_str="test_entity_2")
+    entity_controller.add_entity(test_entity_1).add_entity(test_entity_2)
+    received_entity = entity_controller.get_entity(TestSocialMediaEntity)
+    assert test_entity_1 == received_entity
+    received_entity = entity_controller.get_entity(TestSocialMediaEntity)
+    assert test_entity_2 == received_entity
 
 
 def test_unique_sequences_objects():
-    pass
+    """
+    Test case virtual storages should not overlap between different objects
+    """
+    entity_controller_1 = EntityController()
+    entity_controller_2 = EntityController()
+    test_entity_1 = TestSocialMediaEntity(test_str="test_entity_1")
+    test_entity_2 = TestSocialMediaEntity(test_str="test_entity_2")
+    entity_controller_1.add_entity(test_entity_1)
+    entity_controller_2.add_entity(test_entity_2)
+    assert (
+        entity_controller_1.get_virtual_storage()
+        != entity_controller_2.get_virtual_storage()
+    )
+
+
+@pytest.mark.parametrize(
+    "input_value",
+    [
+        1,  # int
+        0.2,  # float
+        [1, 4, 5],  # list
+        "hello",  # str
+        True,  # bool
+        None,  # NoneType
+        (1, 2, 3),  # tuple
+        {"key": "value"},  # dict
+        {1, 2, 3},  # set
+        3 + 4j,  # complex
+        b"bytes",  # bytes
+        bytearray(b"test"),  # bytearray
+    ],
+)
+def test_get_entity_incorrect_type_base(input_value):
+    """
+    Test case virtual storages should not overlap between different objects
+    """
+    with pytest.raises(TypeError):
+        EntityController().get_entity(input_value)
+
+
+def test_get_entity_incorrect_type_abc_class():
+    """
+    Test case prohibiting transfer of abc class
+    """
+    with pytest.raises(BanningAbcClass):
+        EntityController().get_entity(SocialMediaEntity)
+
+
+def test_get_entity_out_stock():
+    """
+    Test case exceptions when the passed type is not in the virtual storage
+    """
+    with pytest.raises(PresenceObjectException):
+        EntityController().get_entity(TestSocialMediaEntity)
+
+
+def test_purge_virtual_storage():
+    """
+    Test case virtual storage must clear empty entity lists
+    """
+    entity_controller = EntityController()
+    entity_controller.add_entity(TestSocialMediaEntity(test_str="test_entity_1"))
+    entity_controller.get_entity(TestSocialMediaEntity)
+    assert entity_controller.get_virtual_storage() == {}
