@@ -123,6 +123,7 @@ def test_purge_virtual_storage():
     entity_controller.get_entity(TestSocialMediaEntity)
     assert entity_controller.get_virtual_storage() == {}
 
+
 def test_independence_virtual_storage():
     """
     Test case virtual storage must clear empty entity lists
@@ -130,5 +131,7 @@ def test_independence_virtual_storage():
     entity_controller = EntitiesController()
     entity_controller.add_entity(TestSocialMediaEntity(test_str="test_entity_1"))
     entity_copy = entity_controller.get_virtual_storage()
-    entity_copy["TestSocialMediaEntity2"] = [TestSocialMediaEntity(test_str="test_entity_2")]
+    entity_copy["TestSocialMediaEntity2"] = [
+        TestSocialMediaEntity(test_str="test_entity_2")
+    ]
     assert entity_copy != entity_controller.get_virtual_storage()

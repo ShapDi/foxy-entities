@@ -1,7 +1,7 @@
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SocialMediaEntity(BaseModel):
-    id: uuid.UUID = uuid.uuid4()
+    id: uuid.UUID = Field(default_factory=uuid.uuid4)
