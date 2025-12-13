@@ -1,4 +1,4 @@
-# social-media-entities
+# foxy_entities
 
 ## Library for managing social media entities
 
